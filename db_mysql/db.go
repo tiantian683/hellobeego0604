@@ -1,46 +1,59 @@
 package db_mysql
 
 import (
-
+	"crypto/md5"
 	"database/sql"
+	"encoding/hex"
 	"fmt"
 	"github.com/astaxie/beego"
-
+	"hellobeego0604/models"
 )
 
-//var Db
+var Db *sql.DB
+/**
+ * 连接mysql数据库
+ */
+func Connect(){
 
-func Connect()  {
-	//定义config变量，接收并赋值全局配置变量
+	//项目配置
 	config := beego.AppConfig
-	//获取配置选项
-	appName := config.String("appname")
-	fmt.Println("项目应用名称",appName)
-	port,err := config.Int("httpport")
-	if err != nil {
-		//配置信息解析错误
-		panic("项目配置信息解析错误，请查阅后重试")
-	}
-	fmt.Println("应用监听端口",port)
-
-	driver := config.String("db_driver")
-	dbuser := config.String("db_user")
+	dbDriver := config.String("db_driverName")
+	dbUser := config.String("db_user")
 	dbPassword := config.String("db_password")
-	dbIp := config.String("db_Ip")
+	dbIp := config.String("db_ip")
 	dbName := config.String("db_name")
-	//db.Open连接数据库，有俩个参数
-	db,err :=sql.Open(driver,dbuser+":"+dbPassword+"@tcp("+dbIp+")/"+dbName+"?charset=utf8")
-	if err != nil{
-		//err不为nil，表示数据库连接出现错误，程序就此中断
-		//早发现，早解决
-		panic("数据连接打开失败，，请重试")//使程序进入恐慌状态，程序终止执行
+	fmt.Println(dbDriver,dbUser,dbPassword)
+
+	//连接数据库
+	connUrl := dbUser +":" + dbPassword + "@tcp("+dbIp+")/"+dbName+"?charset=utf8"
+	db, err := sql.Open(dbDriver,connUrl)
+	if err != nil {// err不为nil，表示连接数据库时出现了错误, 程序就在此中断就可以，不用再执行了。
+		//早解决，早解决
+		panic("数据库连接错误，请检查配置")
 	}
-	//Db = db
+	Db = db
 	fmt.Println(db)
 }
-//将用户信息保存到数据库中去
-//func AddUser(u models.User) (int64,error) {
- //Db.Exec("inser into user (name")
-	//md5Hash := md5.New()
-	//md5Hash :=
+
+/**
+* 将用户信息保存到数据库中去的函数
+ */
+func AddUser(u models.User)(int64, error){
+	//1、将密码进行hash计算，得到密码hash值，然后在存
+	md5Hash := md5.New()
+	md5Hash.Write([]byte(u.Password))
+	psswordBytes := md5Hash.Sum(nil)
+	u.Password = hex.EncodeToString(psswordBytes)
+	//execute， .exe
+	result, err :=Db.Exec("insert into user(name,birthday,address,password)" +
+		" values(?,?,?,?) ", u.Name,u.Birthday,u.Address,u.Password)
+	if err != nil {
+		return -1,err
+	}
+	row,err := result.RowsAffected()
+	if err != nil {
+		return -1,err
+	}
+	return row,nil
+}
 

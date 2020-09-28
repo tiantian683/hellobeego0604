@@ -4,6 +4,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/astaxie/beego"
 
 	"hellobeego0604/db_mysql"
