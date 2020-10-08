@@ -59,12 +59,12 @@ func (c *MainController) Post(){
 	var person models.Person
 	dataBytes, err :=ioutil.ReadAll(c.Ctx.Request.Body)
 	if err != nil {
-		c.Ctx.WriteString("数据接收错误，请重试")
+		c.Ctx.WriteString("数据接收错误，重试")
 		return
 	}
 	err = json.Unmarshal(dataBytes,&person)
 	if err != nil {
-		c.Ctx.WriteString("数据解析失败，请重试")
+		c.Ctx.WriteString("数据解析失败，重试")
 		return
 	}
 	fmt.Println("姓名:",person.Name)
